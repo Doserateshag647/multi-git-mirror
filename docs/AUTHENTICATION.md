@@ -129,6 +129,15 @@ For providers that support SSH, use the `ssh_private_key` input with the `generi
     ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
 ```
 
+### How It Works
+
+When `ssh_private_key` is provided, the action automatically:
+
+1. Writes the key to `/root/.ssh/mirror_key` with `0600` permissions
+2. Creates an SSH config with `StrictHostKeyChecking no`
+3. Sets `GIT_SSH_COMMAND` to use the configured key
+4. Cleans up all SSH files after mirroring completes
+
 ### Setup
 
 1. Generate an SSH key pair: `ssh-keygen -t ed25519 -C "mirror-action"`
@@ -144,3 +153,10 @@ For providers that support SSH, use the `ssh_private_key` input with the `generi
 - **Rotate tokens regularly** — Set expiration dates and rotate periodically
 - **Use separate tokens per target** — Avoid reusing a single token across providers
 - **Audit access** — Regularly review which tokens have access to your repositories
+
+### Built-in Security Features
+
+- **Credential URL encoding** — Special characters (`@`, `:`, `/`, etc.) in passwords are URL-encoded to prevent URL parsing issues
+- **Debug log masking** — Tokens and passwords are replaced with `***` in debug logs
+- **SSH key cleanup** — SSH key files are automatically removed after mirroring
+- **Config validation** — Warns when required credentials are missing for a target provider

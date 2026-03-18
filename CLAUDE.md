@@ -11,8 +11,10 @@ GitHub Action to mirror repositories to multiple Git hosting providers (GitLab, 
 ```
 cmd/main.go                  # Entrypoint
 internal/
-  config/                    # Input parsing, target detection, env bools
-  mirror/                    # Mirror logic (push branches/tags, auth URL injection)
+  config/                    # Input parsing, target detection, env bools, validation
+  mirror/
+    mirror.go                # Mirror logic (push branches/tags, auth URL injection, log masking)
+    ssh.go                   # SSH key setup/cleanup for git operations
   output/                    # GitHub Actions output writer (JSON result, counts)
 Makefile                     # Build, test, lint commands
 Dockerfile                   # Multi-stage (golang:1.24-alpine → alpine:3.21)
