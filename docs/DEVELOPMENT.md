@@ -43,7 +43,7 @@ Guide for building, testing, and contributing to git-mirror-action.
 │       └── output.go            # GitHub Actions output writer
 ├── docs/                        # Documentation
 ├── .github/
-│   ├── workflows/               # CI/CD workflows (9 files)
+│   ├── workflows/               # CI/CD workflows (10 files)
 │   ├── dependabot.yml           # Dependency updates
 │   └── release.yml              # Release note categories
 ├── action.yml                   # Action metadata (15 inputs, 3 outputs)
@@ -131,6 +131,7 @@ The Dockerfile uses a multi-stage build:
 | `contributors.yml` | after changelog | Auto-generate CONTRIBUTORS.md |
 | `use-action.yml` | after release, dispatch | Smoke test with released action |
 | `gitlab-mirror.yml` | push(main) | Backup to GitLab |
+| `bitbucket-mirror.yml` | push(main) | Backup to Bitbucket |
 | `stale-issues.yml` | daily cron | Auto-close stale issues |
 | `dependabot-auto-merge.yml` | PR (dependabot) | Auto-merge minor/patch updates |
 | `issue-greeting.yml` | issue opened | Welcome message |

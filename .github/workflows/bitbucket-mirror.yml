@@ -1,0 +1,30 @@
+name: Backup GitHub to Bitbucket
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - .github/workflows/*
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub Repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Mirror to Bitbucket
+        uses: somaz94/git-mirror-action@v1
+        with:
+          targets: |
+            bitbucket::https://bitbucket.org/somaz94/git-mirror-action.git
+          bitbucket_username: somaz94
+          bitbucket_api_token: ${{ secrets.BITBUCKET_TOKEN }}
+          mirror_branches: 'all'
+          mirror_tags: 'true'
+          force_push: 'true'

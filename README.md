@@ -233,7 +233,7 @@ Many teams need to keep repository mirrors in sync across multiple Git providers
 │   └── output/
 │       └── output.go            # GitHub Actions output writer
 ├── .github/
-│   └── workflows/               # CI/CD workflows (9 files)
+│   └── workflows/               # CI/CD workflows (10 files)
 ├── action.yml                   # Action metadata
 ├── Dockerfile                   # Multi-stage Docker build
 ├── Makefile                     # Build targets
