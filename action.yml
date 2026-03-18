@@ -1,26 +1,76 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: 'Git Mirror Action'
+description: 'Mirror repositories to multiple Git hosting providers (GitLab, CodeCommit, Bitbucket, etc.)'
+author: 'somaz94'
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: heart
-  color: red
+  icon: 'copy'
+  color: 'blue'
 
-# Define your inputs here.
 inputs:
-  who-to-greet:
-    description: Your input description here
+  targets:
+    description: 'Mirror target URLs (newline-separated). Format: provider::url or just url'
     required: true
-    default: World
+  gitlab_token:
+    description: 'GitLab personal access token'
+    required: false
+    default: ''
+  github_token:
+    description: 'GitHub personal access token'
+    required: false
+    default: ''
+  bitbucket_username:
+    description: 'Bitbucket username for app password auth'
+    required: false
+    default: ''
+  bitbucket_password:
+    description: 'Bitbucket app password'
+    required: false
+    default: ''
+  ssh_private_key:
+    description: 'SSH private key for SSH-based authentication'
+    required: false
+    default: ''
+  mirror_branches:
+    description: 'Branches to mirror (comma-separated, or "all" for all branches)'
+    required: false
+    default: 'all'
+  mirror_tags:
+    description: 'Mirror tags (true/false)'
+    required: false
+    default: 'true'
+  force_push:
+    description: 'Use force push (true/false)'
+    required: false
+    default: 'true'
+  dry_run:
+    description: 'Dry run mode - log actions without pushing (true/false)'
+    required: false
+    default: 'false'
+  debug:
+    description: 'Enable debug logging (true/false)'
+    required: false
+    default: 'false'
 
-# Define your outputs here.
 outputs:
-  greeting:
-    description: Your output description here
+  result:
+    description: 'JSON object with mirror results per target'
+  mirrored_count:
+    description: 'Number of successfully mirrored targets'
+  failed_count:
+    description: 'Number of failed mirror targets'
 
 runs:
-  using: docker
-  image: Dockerfile
+  using: 'docker'
+  image: 'Dockerfile'
   env:
-    INPUT_WHO_TO_GREET: ${{ inputs.who-to-greet }}
+    INPUT_TARGETS: ${{ inputs.targets }}
+    INPUT_GITLAB_TOKEN: ${{ inputs.gitlab_token }}
+    INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+    INPUT_BITBUCKET_USERNAME: ${{ inputs.bitbucket_username }}
+    INPUT_BITBUCKET_PASSWORD: ${{ inputs.bitbucket_password }}
+    INPUT_SSH_PRIVATE_KEY: ${{ inputs.ssh_private_key }}
+    INPUT_MIRROR_BRANCHES: ${{ inputs.mirror_branches }}
+    INPUT_MIRROR_TAGS: ${{ inputs.mirror_tags }}
+    INPUT_FORCE_PUSH: ${{ inputs.force_push }}
+    INPUT_DRY_RUN: ${{ inputs.dry_run }}
+    INPUT_DEBUG: ${{ inputs.debug }}
