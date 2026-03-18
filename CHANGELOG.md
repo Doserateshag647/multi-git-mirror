@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.1](https://github.com/somaz94/git-mirror-action/compare/v1.0.0...v1.0.1) (2026-03-18)
+
+### Bug Fixes
+
+- use secrets for Bitbucket username and document x-token-auth usage ([0903b9e](https://github.com/somaz94/git-mirror-action/commit/0903b9ed8b4e3c3182621404afff2c4ffc9d5da5))
+- use local action in bitbucket-mirror.yml until next release ([a5d0211](https://github.com/somaz94/git-mirror-action/commit/a5d0211bed0a3efe08eb1133a4a0fd5a6acf7ee2))
+
+### Code Refactoring
+
+- rename bitbucket_password to bitbucket_api_token ([6d523b4](https://github.com/somaz94/git-mirror-action/commit/6d523b4f3a7e835b488bb5597ec6d0d9c6286f6f))
+
+### Documentation
+
+- note Workspace Access Token requires Bitbucket Premium plan ([bec56b9](https://github.com/somaz94/git-mirror-action/commit/bec56b9cea5e08ec8fbafb815d35bf2edeee8cc4))
+- update Bitbucket auth guide with Repository/Workspace Access Tokens ([4369237](https://github.com/somaz94/git-mirror-action/commit/4369237470d747bf4623a51a504d14cfd8b6a460))
+- update CONTRIBUTORS.md ([4a88a78](https://github.com/somaz94/git-mirror-action/commit/4a88a78a32ffd63874f2bc35815b93a3111efe94))
+- update changelog ([6021cac](https://github.com/somaz94/git-mirror-action/commit/6021cacb44a7bba1d08bc1ee627418cf62cee60e))
+
+### Continuous Integration
+
+- disable Bitbucket tests until plan issue is resolved ([c07baa4](https://github.com/somaz94/git-mirror-action/commit/c07baa471b77f1478dcf6d5699d2b93b2f2f199d))
+- add Bitbucket mirror workflow and Bitbucket CI tests ([221443e](https://github.com/somaz94/git-mirror-action/commit/221443e44af6159571255fe7268650abb451412d))
+
+### Contributors
+
+- somaz
+
+<br/>
+
 ## [v1.0.0](https://github.com/somaz94/git-mirror-action/releases/tag/v1.0.0) (2026-03-18)
 
 ### Features
