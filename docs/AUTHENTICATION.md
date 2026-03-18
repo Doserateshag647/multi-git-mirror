@@ -123,7 +123,7 @@ Uses x-access-token authentication. The token is injected as `https://x-access-t
 
 ## Bitbucket
 
-Uses username and API token (or legacy app password) authentication. Credentials are injected as `https://user:token@bitbucket.org/...`.
+Uses access token authentication. Credentials are injected as `https://user:token@bitbucket.org/...`.
 
 ```yaml
 - uses: somaz94/git-mirror-action@v1
@@ -145,26 +145,53 @@ Uses username and API token (or legacy app password) authentication. Credentials
 
 > **Note**: Both `bitbucket_username` and `bitbucket_api_token` must be provided. If either is missing, the URL is used as-is.
 
-> **Important**: Bitbucket has deprecated App Passwords (disabled June 9, 2026). Use **API Tokens** instead.
+> **Important**: Bitbucket deprecated App Passwords (can no longer be created as of Sep 9, 2025; fully disabled June 9, 2026). Use **Repository Access Token** or **Workspace Access Token** instead. Atlassian API Tokens (`id.atlassian.com`) are for REST APIs only and do **NOT** work for git HTTPS authentication.
 
 <br/>
 
-### Step-by-Step: Creating a Bitbucket API Token
+### Step-by-Step: Creating a Repository Access Token (Recommended)
 
-1. Go to [Atlassian API Tokens](https://id.atlassian.com/manage-profile/security/api-tokens)
-2. Click **Create API token**
-3. Enter label: `git-mirror-action`
-4. Click **Create**
-5. **Copy the token immediately** — it will not be shown again
-6. Add two GitHub secrets:
-   - `BITBUCKET_USERNAME`: Your Bitbucket username (not email)
-   - `BITBUCKET_API_TOKEN`: The API token you just created
+Scoped to a single repository. Best for minimal-privilege access.
+
+1. Go to your **Bitbucket repository** → **Repository settings**
+2. In the left sidebar under **Security**, click **Access tokens**
+3. Click **Create Repository Access Token**
+4. Configure:
+   - **Name**: `git-mirror-action`
+   - **Scopes**: Check **Repositories** → **Write**
+5. Click **Create**
+6. **Copy the token immediately** — it will not be shown again
+7. Add two GitHub secrets:
+   - `BITBUCKET_USERNAME`: The auto-generated username shown with the token (e.g., `x-token-auth`)
+   - `BITBUCKET_API_TOKEN`: The token you just created
+
+> **Note**: Repository Access Tokens have an auto-generated username (shown on creation). Use that as `bitbucket_username`, not your personal username.
+
+<br/>
+
+### Alternative: Creating a Workspace Access Token
+
+Scoped to all repositories in a workspace. Useful when mirroring multiple repos.
+
+1. Go to your **Bitbucket workspace** → **Settings** (or visit `https://bitbucket.org/<workspace>/workspace/settings/access-tokens`)
+2. In the left sidebar under **Apps and features**, click **Access tokens**
+3. Click **Create Workspace Access Token**
+4. Configure:
+   - **Name**: `git-mirror-action`
+   - **Scopes**: Check **Repositories** → **Write**
+5. Click **Create**
+6. **Copy the token immediately** — it will not be shown again
+7. Add two GitHub secrets:
+   - `BITBUCKET_USERNAME`: The auto-generated username shown with the token
+   - `BITBUCKET_API_TOKEN`: The token you just created
 
 <br/>
 
 ### Finding Your Bitbucket Username
 
-Your Bitbucket username is NOT your email. To find it:
+When using **Repository/Workspace Access Tokens**, the username is auto-generated and shown when the token is created. Use that username, not your personal one.
+
+For personal username (used with legacy App Passwords):
 1. Click the **gear icon** (⚙️, top-right) → **Personal Bitbucket settings**
 2. Your username is shown under **Atlassian account settings** or in the URL: `bitbucket.org/<username>/`
 
