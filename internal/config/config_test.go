@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -126,5 +127,133 @@ func TestEnvBool(t *testing.T) {
 	}
 	if !envBool("NONEXISTENT", true) {
 		t.Error("expected default true")
+	}
+}
+
+func TestParseTargetsUnknownProvider(t *testing.T) {
+	_, err := parseTargets("typo::https://example.com/repo.git")
+	if err == nil {
+		t.Fatal("expected error for unknown provider")
+	}
+	if !strings.Contains(err.Error(), "unknown provider") {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestParseTargetsInvalidURL(t *testing.T) {
+	_, err := parseTargets("gitlab::not-a-valid-url")
+	if err == nil {
+		t.Fatal("expected error for invalid URL format")
+	}
+	if !strings.Contains(err.Error(), "invalid URL format") {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestParseTargetsSSHURL(t *testing.T) {
+	targets, err := parseTargets("git@github.com:org/repo.git")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(targets) != 1 {
+		t.Fatalf("expected 1 target, got %d", len(targets))
+	}
+	if targets[0].Provider != ProviderGitHub {
+		t.Errorf("expected github provider, got %s", targets[0].Provider)
+	}
+}
+
+func TestValidateEmptyBranches(t *testing.T) {
+	cfg := &Config{
+		MirrorAllBranches: false,
+		MirrorBranches:    nil,
+		Targets:           []Target{{Provider: ProviderGeneric, URL: "https://example.com/repo.git"}},
+	}
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected error for empty branches with MirrorAllBranches=false")
+	}
+	if !strings.Contains(err.Error(), "mirror_branches") {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateWithBranches(t *testing.T) {
+	cfg := &Config{
+		MirrorAllBranches: false,
+		MirrorBranches:    []string{"main"},
+		Targets:           []Target{{Provider: ProviderGeneric, URL: "https://example.com/repo.git"}},
+	}
+	err := cfg.Validate()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateAllBranches(t *testing.T) {
+	cfg := &Config{
+		MirrorAllBranches: true,
+		Targets:           []Target{{Provider: ProviderGeneric, URL: "https://example.com/repo.git"}},
+	}
+	err := cfg.Validate()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateWarnsNoToken(t *testing.T) {
+	// Warnings are logged to stderr but don't return error
+	cfg := &Config{
+		MirrorAllBranches: true,
+		Targets: []Target{
+			{Provider: ProviderGitLab, URL: "https://gitlab.com/org/repo.git"},
+			{Provider: ProviderGitHub, URL: "https://github.com/org/repo.git"},
+			{Provider: ProviderBitbucket, URL: "https://bitbucket.org/org/repo.git"},
+		},
+	}
+	err := cfg.Validate()
+	if err != nil {
+		t.Fatalf("expected no error (only warnings): %v", err)
+	}
+}
+
+func TestLoadEmptyBranchesFails(t *testing.T) {
+	t.Setenv("INPUT_TARGETS", "gitlab::https://gitlab.com/org/repo.git")
+	t.Setenv("INPUT_GITLAB_TOKEN", "token")
+	t.Setenv("INPUT_MIRROR_BRANCHES", "")
+
+	_, err := Load()
+	if err == nil {
+		t.Fatal("expected error for empty branches")
+	}
+}
+
+func TestParseTargetsEmptyProvider(t *testing.T) {
+	_, err := parseTargets("::https://example.com/repo.git")
+	if err == nil {
+		t.Fatal("expected error for empty provider")
+	}
+}
+
+func TestParseTargetsValidProviders(t *testing.T) {
+	tests := []struct {
+		input    string
+		provider Provider
+	}{
+		{"gitlab::https://gitlab.com/repo.git", ProviderGitLab},
+		{"github::https://github.com/repo.git", ProviderGitHub},
+		{"bitbucket::https://bitbucket.org/repo.git", ProviderBitbucket},
+		{"codecommit::https://git-codecommit.us-east-1.amazonaws.com/v1/repos/repo", ProviderCodeCommit},
+		{"generic::https://example.com/repo.git", ProviderGeneric},
+	}
+
+	for _, tt := range tests {
+		targets, err := parseTargets(tt.input)
+		if err != nil {
+			t.Fatalf("unexpected error for %q: %v", tt.input, err)
+		}
+		if targets[0].Provider != tt.provider {
+			t.Errorf("input %q: expected provider %s, got %s", tt.input, tt.provider, targets[0].Provider)
+		}
 	}
 }

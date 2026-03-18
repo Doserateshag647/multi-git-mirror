@@ -17,22 +17,6 @@ func mockGitOK() gitRunner {
 	}
 }
 
-// mockGitFail returns a gitRunner that always fails.
-func mockGitFail(msg string) gitRunner {
-	return func(args ...string) error {
-		return fmt.Errorf("%s", msg)
-	}
-}
-
-// mockGitFailOn returns a gitRunner that fails when the first arg matches.
-func mockGitFailOn(failCmd string) gitRunner {
-	return func(args ...string) error {
-		if len(args) > 0 && args[0] == failCmd {
-			return fmt.Errorf("mock %s failure", failCmd)
-		}
-		return nil
-	}
-}
 
 func TestInjectTokenAuth(t *testing.T) {
 	tests := []struct {
@@ -561,5 +545,130 @@ func TestExecGit(t *testing.T) {
 	err = m.execGit("invalid-command-that-does-not-exist")
 	if err == nil {
 		t.Error("expected error for invalid git command")
+	}
+}
+
+func TestMaskSecrets(t *testing.T) {
+	cfg := &config.Config{
+		GitLabToken: "my-secret-token",
+		GitHubToken: "gh-token-123",
+	}
+	m := New(cfg)
+
+	masked := m.maskSecrets("git remote add mirror https://oauth2:my-secret-token@gitlab.com/repo.git")
+	if strings.Contains(masked, "my-secret-token") {
+		t.Errorf("expected token to be masked, got: %s", masked)
+	}
+	if !strings.Contains(masked, "***") {
+		t.Errorf("expected *** in masked output, got: %s", masked)
+	}
+}
+
+func TestMaskSecretsNoSecrets(t *testing.T) {
+	cfg := &config.Config{}
+	m := New(cfg)
+
+	input := "git push --all remote"
+	masked := m.maskSecrets(input)
+	if masked != input {
+		t.Errorf("expected unchanged string, got: %s", masked)
+	}
+}
+
+func TestCollectSecrets(t *testing.T) {
+	cfg := &config.Config{
+		GitLabToken:       "gl-tok",
+		GitHubToken:       "",
+		BitbucketPassword: "bb-pass",
+		SSHPrivateKey:     "ssh-key",
+	}
+	secrets := collectSecrets(cfg)
+
+	if len(secrets) != 3 {
+		t.Fatalf("expected 3 secrets, got %d", len(secrets))
+	}
+}
+
+func TestInjectTokenAuthSpecialChars(t *testing.T) {
+	tests := []struct {
+		name     string
+		url      string
+		user     string
+		pass     string
+		contains string
+	}{
+		{
+			name:     "password with @",
+			url:      "https://gitlab.com/org/repo.git",
+			user:     "oauth2",
+			pass:     "pass@word",
+			contains: "pass%40word",
+		},
+		{
+			name:     "password with :",
+			url:      "https://gitlab.com/org/repo.git",
+			user:     "oauth2",
+			pass:     "pass:word",
+			contains: "pass%3Aword",
+		},
+		{
+			name:     "password with /",
+			url:      "https://gitlab.com/org/repo.git",
+			user:     "oauth2",
+			pass:     "pass/word",
+			contains: "pass%2Fword",
+		},
+		{
+			name:     "username with special chars",
+			url:      "https://bitbucket.org/org/repo.git",
+			user:     "user@domain.com",
+			pass:     "token",
+			contains: "user%40domain.com",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := injectTokenAuth(tt.url, tt.user, tt.pass)
+			if !strings.Contains(got, tt.contains) {
+				t.Errorf("expected URL to contain %q, got: %s", tt.contains, got)
+			}
+		})
+	}
+}
+
+func TestMirrorToRemoteCleanupOnFailure(t *testing.T) {
+	// Verify that remote is cleaned up even when push fails
+	var removeCalls int
+	callCount := 0
+	cfg := &config.Config{
+		MirrorAllBranches: true,
+	}
+	m := New(cfg)
+	m.gitFn = func(args ...string) error {
+		callCount++
+		if len(args) >= 2 && args[0] == "remote" && args[1] == "remove" {
+			removeCalls++
+		}
+		// 1: remote remove (initial), 2: remote add, 3: push (fail), 4: remote remove (defer)
+		if callCount == 3 {
+			return fmt.Errorf("push failed")
+		}
+		return nil
+	}
+
+	target := config.Target{
+		Provider: config.ProviderGeneric,
+		URL:      "https://example.com/repo.git",
+	}
+
+	result := m.mirrorTo(target)
+
+	if result.Success {
+		t.Error("expected failure")
+	}
+	// Should have 2 remote remove calls: initial + cleanup defer
+	if removeCalls != 2 {
+		t.Errorf("expected 2 remote remove calls (init + defer cleanup), got %d", removeCalls)
 	}
 }
