@@ -19,7 +19,8 @@ jobs:
           lfs: true
 
       - name: Mirror to Bitbucket
-        uses: somaz94/git-mirror-action@v1
+        # uses: somaz94/git-mirror-action@v1
+        uses: ./
         with:
           targets: |
             bitbucket::https://bitbucket.org/somaz94/git-mirror-action.git
