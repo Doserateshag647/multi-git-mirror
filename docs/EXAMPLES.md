@@ -11,6 +11,8 @@ Complete workflow examples for common mirroring scenarios.
 - [Release and Mirror](#release-and-mirror)
 - [Multi-Provider Backup](#multi-provider-backup)
 - [Selective Branch Mirror](#selective-branch-mirror)
+- [Exclude Branches](#exclude-branches)
+- [Parallel Mirror with Retry](#parallel-mirror-with-retry)
 - [Dry Run Testing](#dry-run-testing)
 - [Conditional Mirror with Output](#conditional-mirror-with-output)
 
@@ -177,6 +179,43 @@ Mirror only specific branches.
     gitlab_token: ${{ secrets.GITLAB_TOKEN }}
     mirror_branches: 'main,develop,release'
     mirror_tags: 'false'
+```
+
+<br/>
+
+## Exclude Branches
+
+Mirror all branches except specific ones.
+
+```yaml
+- uses: somaz94/git-mirror-action@v1
+  with:
+    targets: |
+      gitlab::https://gitlab.com/myorg/myrepo.git
+    gitlab_token: ${{ secrets.GITLAB_TOKEN }}
+    mirror_branches: 'all'
+    exclude_branches: 'staging,experiment,tmp'
+```
+
+<br/>
+
+## Parallel Mirror with Retry
+
+Mirror to multiple providers concurrently with automatic retry on failure.
+
+```yaml
+- uses: somaz94/git-mirror-action@v1
+  with:
+    targets: |
+      gitlab::https://gitlab.com/myorg/myrepo.git
+      bitbucket::https://bitbucket.org/myorg/myrepo.git
+      codecommit::https://git-codecommit.us-east-1.amazonaws.com/v1/repos/myrepo
+    gitlab_token: ${{ secrets.GITLAB_TOKEN }}
+    bitbucket_username: ${{ secrets.BITBUCKET_USERNAME }}
+    bitbucket_password: ${{ secrets.BITBUCKET_APP_PASSWORD }}
+    parallel: 'true'
+    retry_count: '3'
+    retry_delay: '10'
 ```
 
 <br/>

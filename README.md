@@ -15,11 +15,15 @@ A Go-based GitHub Action that mirrors repositories to multiple Git hosting provi
 - Multi-target mirroring in a single workflow step
 - Auto-detect provider from URL (GitLab, GitHub, Bitbucket, CodeCommit)
 - Selective branch mirroring or mirror all branches
+- Exclude specific branches from mirroring
 - Tag mirroring support
 - Force push option for exact replication
 - Multiple authentication methods (token, app password, SSH key)
-- Dry run mode for safe testing
+- Parallel mirroring to multiple targets concurrently
+- Retry logic with configurable count and delay
+- Dry run mode with remote connectivity pre-check (`git ls-remote`)
 - JSON result output for downstream steps
+- Credential masking in all log output
 
 > For detailed documentation, see the [docs/](docs/) folder:
 > [Authentication](docs/AUTHENTICATION.md) |
@@ -166,7 +170,11 @@ jobs:
 | `mirror_branches` | Branches to mirror (comma-separated, or `all`) | No | `all` |
 | `mirror_tags` | Mirror tags | No | `true` |
 | `force_push` | Use force push | No | `true` |
-| `dry_run` | Log actions without pushing | No | `false` |
+| `dry_run` | Dry run mode with remote pre-check | No | `false` |
+| `retry_count` | Number of retry attempts on push failure | No | `0` |
+| `retry_delay` | Delay in seconds between retries | No | `5` |
+| `exclude_branches` | Branches to exclude (comma-separated) | No | `''` |
+| `parallel` | Mirror to targets in parallel | No | `false` |
 | `debug` | Enable debug logging | No | `false` |
 
 <br/>
@@ -219,7 +227,8 @@ Many teams need to keep repository mirrors in sync across multiple Git providers
 │   │   ├── config.go            # Configuration loading & target parsing
 │   │   └── config_test.go       # Config tests
 │   ├── mirror/
-│   │   ├── mirror.go            # Mirror logic & auth URL injection
+│   │   ├── mirror.go            # Mirror logic, retry, parallel, auth URL injection
+│   │   ├── ssh.go               # SSH key setup/cleanup
 │   │   └── mirror_test.go       # Mirror tests
 │   └── output/
 │       └── output.go            # GitHub Actions output writer
