@@ -44,6 +44,7 @@ func collectSecrets(cfg *config.Config) []string {
 	for _, s := range []string{
 		cfg.GitLabToken,
 		cfg.GitHubToken,
+		cfg.BitbucketUsername,
 		cfg.BitbucketPassword,
 		cfg.SSHPrivateKey,
 	} {
@@ -293,8 +294,16 @@ func (m *Mirror) execGit(args ...string) error {
 	m.logDebug("git %s", m.maskSecrets(strings.Join(args, " ")))
 	cmd := exec.Command("git", args...)
 	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+
+	// Capture stderr and mask secrets before outputting
+	var stderrBuf strings.Builder
+	cmd.Stderr = &stderrBuf
+
+	err := cmd.Run()
+	if stderrBuf.Len() > 0 {
+		fmt.Fprint(os.Stderr, m.maskSecrets(stderrBuf.String()))
+	}
+	return err
 }
 
 // maskSecrets replaces sensitive values in a string with ***.

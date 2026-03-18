@@ -132,6 +132,8 @@ func (c *Config) Validate() error {
 			if (c.BitbucketUsername == "" || c.BitbucketPassword == "") && c.SSHPrivateKey == "" {
 				logWarning("target %s: no bitbucket credentials or ssh_private_key provided", t.URL)
 			}
+		case ProviderCodeCommit:
+			logWarning("target %s: ensure AWS credentials and credential-helper are configured", t.URL)
 		}
 	}
 

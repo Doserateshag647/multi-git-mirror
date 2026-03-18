@@ -607,13 +607,39 @@ func TestCollectSecrets(t *testing.T) {
 	cfg := &config.Config{
 		GitLabToken:       "gl-tok",
 		GitHubToken:       "",
+		BitbucketUsername: "bb-user",
 		BitbucketPassword: "bb-pass",
 		SSHPrivateKey:     "ssh-key",
 	}
 	secrets := collectSecrets(cfg)
 
-	if len(secrets) != 3 {
-		t.Fatalf("expected 3 secrets, got %d", len(secrets))
+	if len(secrets) != 4 {
+		t.Fatalf("expected 4 secrets, got %d", len(secrets))
+	}
+}
+
+func TestCollectSecretsEmpty(t *testing.T) {
+	cfg := &config.Config{}
+	secrets := collectSecrets(cfg)
+
+	if len(secrets) != 0 {
+		t.Fatalf("expected 0 secrets, got %d", len(secrets))
+	}
+}
+
+func TestMaskSecretsInStderr(t *testing.T) {
+	cfg := &config.Config{
+		BitbucketUsername: "myuser",
+		BitbucketPassword: "mypass",
+	}
+	m := New(cfg)
+
+	masked := m.maskSecrets("https://myuser:mypass@bitbucket.org/org/repo.git")
+	if strings.Contains(masked, "myuser") {
+		t.Errorf("expected username to be masked, got: %s", masked)
+	}
+	if strings.Contains(masked, "mypass") {
+		t.Errorf("expected password to be masked, got: %s", masked)
 	}
 }
 

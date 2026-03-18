@@ -209,6 +209,7 @@ func TestValidateWarnsNoToken(t *testing.T) {
 			{Provider: ProviderGitLab, URL: "https://gitlab.com/org/repo.git"},
 			{Provider: ProviderGitHub, URL: "https://github.com/org/repo.git"},
 			{Provider: ProviderBitbucket, URL: "https://bitbucket.org/org/repo.git"},
+			{Provider: ProviderCodeCommit, URL: "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/repo"},
 		},
 	}
 	err := cfg.Validate()
