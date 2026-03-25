@@ -1,7 +1,7 @@
 # Multi Git Mirror
 
 [![Continuous Integration](https://github.com/somaz94/multi-git-mirror/actions/workflows/ci.yml/badge.svg)](https://github.com/somaz94/multi-git-mirror/actions/workflows/ci.yml)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Latest Tag](https://img.shields.io/github/v/tag/somaz94/multi-git-mirror)](https://github.com/somaz94/multi-git-mirror/tags)
 [![Top Language](https://img.shields.io/github/languages/top/somaz94/multi-git-mirror)](https://github.com/somaz94/multi-git-mirror)
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Git%20Mirror%20Action-blue?logo=github)](https://github.com/marketplace/actions/multi-git-mirror)
